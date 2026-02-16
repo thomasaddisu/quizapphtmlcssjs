@@ -111,3 +111,16 @@ main {
 .button:hover {
     background: #0056b3;
 }
+
+.feedback {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.correct {
+    color: green;
+}
+
+.wrong {
+    color: red;
+}

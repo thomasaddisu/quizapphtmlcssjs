@@ -91,93 +91,140 @@ const questions = [
   }
 ];
 
-
 const questionText = document.querySelector('.question-text');
 const options = document.querySelectorAll('.options input');
 const nextButton = document.querySelector('.next-btn');
 const scoreText = document.querySelector('.score');
 const questionNumberText = document.querySelector('.question-number');
 const startButton = document.querySelector('.start-quiz');
+const feedbackText = document.querySelector('.feedback');
 
 let score = 0;
 let currentQuestionIndex = 0;
-
-function restartQuiz() {
-    score = 0;
-    currentQuestionIndex = 0;
-
-    options.forEach(option => {
-        option.style.display = "inline-block";
-        option.nextElementSibling.style.display = "inline-block";
-    });
-    // delete restart button
-    if (restartButton) {
-        restartButton.remove();
-        nextButton.style.display = 'block';
-    }
-    loadQuestion();
-}
-
+let answered = false;
+let restartButton;
 
 function loadQuestion() {
-    const currentQuestion = questions[currentQuestionIndex];
-    if (currentQuestionIndex >= questions.length) {
-        questionText.textContent = "Your Final Score is:" + score + "/" + questions.length;
-        if (score >= 8) {
-            questionText.textContent += " Outstanding performance! You truly know your country's history";
-        } else if (score >= 5) {
-            questionText.textContent += " Well done! You have a solid understanding of Ethiopian history";
-        } else {
-            questionText.textContent += " Keep learning and try again — before you go.";
+
+  if (currentQuestionIndex >= questions.length) {
+    showFinalScore();
+    return;
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  answered = false;
+  feedbackText.textContent = "";
+
+  questionText.style.fontSize = "18px";
+  questionText.textContent = currentQuestion.question;
+
+  questionNumberText.textContent = 
+    "Question " + (currentQuestionIndex + 1);
+
+  scoreText.textContent = 
+    "Score: " + score + "/" + currentQuestionIndex;
+
+  options.forEach((option, index) => {
+    option.checked = false;
+    option.disabled = false;
+    option.style.display = "inline-block";
+    option.nextElementSibling.style.display = "inline-block";
+    option.nextElementSibling.style.color = "black";
+    option.nextElementSibling.textContent =
+      currentQuestion.answers[index].text;
+  });
+
+  nextButton.style.display = "block";
+
+  currentQuestionIndex++;
+}
+
+function showFinalScore() {
+
+  questionText.style.fontSize = "24px";
+  questionText.textContent =
+    "Your Final Score is: " + score + "/" + questions.length;
+
+  if (score >= 8) {
+    questionText.textContent += 
+      " Outstanding performance! You truly know Ethiopian history 🇪🇹";
+  } else if (score >= 5) {
+    questionText.textContent += 
+      " Well done! You have a solid understanding.";
+  } else {
+    questionText.textContent += 
+      " Keep learning and try again.";
+  }
+
+  feedbackText.textContent = "";
+
+  options.forEach(option => {
+    option.style.display = "none";
+    option.nextElementSibling.style.display = "none";
+  });
+
+  nextButton.style.display = "none";
+
+  restartButton = document.createElement("button");
+  restartButton.textContent = "Restart Quiz";
+  restartButton.classList.add("button");
+  restartButton.addEventListener("click", restartQuiz);
+
+  document.querySelector(".question")
+    .appendChild(restartButton);
+}
+
+function restartQuiz() {
+  score = 0;
+  currentQuestionIndex = 0;
+
+  restartButton.remove();
+
+  loadQuestion();
+}
+
+options.forEach((option, index) => {
+  option.addEventListener("change", () => {
+
+    if (answered) return;
+
+    answered = true;
+
+    const currentAnswers =
+      questions[currentQuestionIndex - 1].answers;
+
+    if (currentAnswers[index].correct) {
+      score++;
+      feedbackText.textContent =
+        "Correct! 👏 Great choice!";
+      feedbackText.className =
+        "feedback correct";
+    } else {
+      feedbackText.textContent =
+        "Wrong answer ❌";
+      feedbackText.className =
+        "feedback wrong";
+
+      currentAnswers.forEach((ans, i) => {
+        if (ans.correct) {
+          options[i].nextElementSibling
+            .style.color = "green";
         }
-        questionText.style.fontSize = "24px";
-        options.forEach(option => {
-            option.style.display = "none";
-            option.nextElementSibling.style.display = "none";
-        });
-        nextButton.style.display = "none";
-        restartButton = document.createElement("button");
-        restartButton.textContent = "Restart Quiz";
-        restartButton.classList.add("restart-btn");
-        restartButton.classList.add("button");
-        restartButton.addEventListener("click", restartQuiz);
-        document.querySelector(".question").appendChild(restartButton);
-        return;
+      });
     }
 
+    scoreText.textContent =
+      "Score: " + score + "/" + currentQuestionIndex;
 
-    questionText.textContent = currentQuestion.question;
-    scoreText.textContent = "Score: " + Number(score) + "/" + (currentQuestionIndex + 1);
-    questionNumberText.textContent = "Question " + (currentQuestionIndex + 1);
-    options.forEach((option, index) => {
-        option.checked = false;
-        option.nextElementSibling.textContent = currentQuestion.answers[index].text;
-    });
-    currentQuestionIndex++;
-}
-
-
+    options.forEach(opt => opt.disabled = true);
+  });
+});
 
 function startQuiz() {
-
-    loadQuestion();
-
-    // hide start button
-    startButton.style.display = 'none';
-    nextButton.style.display = 'block';
+  startButton.style.display = "none";
+  loadQuestion();
 }
 
-
-options.forEach((option,index)=>{
-    option.addEventListener("change",()=>{
-        if (questions[currentQuestionIndex - 1].answers[index].correct) {
-            score++;
-            scoreText.textContent = "Score: " + score + "/" + (currentQuestionIndex )
-        }
-        
-    })
-})
-
-
-startButton.addEventListener('click', startQuiz);
-nextButton.addEventListener('click', loadQuestion);
+startButton.addEventListener("click", startQuiz);
+nextButton.addEventListener("click", loadQuestion);
